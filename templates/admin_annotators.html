@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Annotators</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+  <style>
+    .anno-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    .anno-table th,
+    .anno-table td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #444;
+    }
+
+    .anno-table th {
+      color: #ffd700;
+      font-weight: 600;
+    }
+
+    .anno-table tr:hover {
+      background: #0b1b33;
+    }
+  </style>
+
+</head>
+
+<body>
+
+  <a href="/admin" class="admin-back-btn">← Back</a>
+
+  <div class="admin-container">
+
+    <div class="admin-card" style="width:750px">
+
+      <h1 class="admin-title">Annotators</h1>
+
+      <input type="text" class="admin-search" placeholder="Search name or email..." onkeyup="filterAnno(event)">
+
+      <table class="anno-table" id="annoTable">
+
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Submitted</th>
+            <th>Approved</th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+          {% if data %}
+
+          {% for row in data %}
+
+          <tr>
+            <td>{{ row["name"] }}</td>
+            <td>{{ row["email"] }}</td>
+            <td>{{ row["submitted"] }}</td>
+            <td>{{ row["approved"] }}</td>
+          </tr>
+
+          {% endfor %}
+
+          {% else %}
+
+          <tr>
+            <td colspan="4" style="text-align:center;">No annotators found</td>
+          </tr>
+
+          {% endif %}
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  </div>
+
+  <script>
+
+    function filterAnno(e) {
+      const q = e.target.value.toLowerCase();
+
+      document.querySelectorAll("#annoTable tbody tr").forEach(row => {
+        row.style.display =
+          row.innerText.toLowerCase().includes(q) ? "" : "none";
+      });
+    }
+
+  </script>
+
+</body>
+
+</html>

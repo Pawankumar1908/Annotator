@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>History</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .history-table th,
+        .history-table td {
+            padding: 10px;
+            border-bottom: 1px solid #444;
+            text-align: left;
+        }
+
+        .history-table th {
+            color: #ffd700;
+        }
+
+        .approved {
+            color: #00ff99;
+            font-weight: bold;
+        }
+
+        .rejected {
+            color: #ff4d4d;
+            font-weight: bold;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <a href="/admin" class="admin-back-btn">← Back</a>
+
+    <div class="admin-container">
+
+        <div class="admin-card" style="width:90%; max-width:1100px;">
+
+            <h1 class="admin-title">History</h1>
+
+            <table class="history-table">
+
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Telugu</th>
+                        <th>English</th>
+                        <th>Action</th>
+                        <th>Admin</th>
+                        <th>Time</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% if data %}
+
+                    {% for row in data %}
+
+                    <tr>
+
+                        <td>{{ row["name"] }}</td>
+                        <td>{{ row["annotator"] }}</td>
+
+                        <td>{{ row["proverb_telugu"] }}</td>
+                        <td>{{ row["proverb_english"] }}</td>
+
+                        <td class="{{ row['action'] }}">
+                            {{ row["action"] }}
+                        </td>
+
+                        <td>{{ row["admin"] }}</td>
+                        <td>{{ row["timestamp"] }}</td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                    {% else %}
+
+                    <tr>
+                        <td colspan="7" style="text-align:center;">No history available</td>
+                    </tr>
+
+                    {% endif %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</body>
+
+</html>

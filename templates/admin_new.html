@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>New Annotations</title>
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+
+
+<body>
+
+<a href="/admin" class="admin-back-btn">← Back</a>
+
+<div class="admin-container new-page">
+
+  <div class="admin-card new-card">
+
+    <!-- HEADER -->
+    <div class="admin-header">
+
+      <div class="admin-count-top">
+        Total Records: {{ data|length }}
+      </div>
+
+      <h1 class="admin-title">New Annotations</h1>
+
+    </div>
+
+
+    <div id="newList" class="repo-list">
+
+    {% if data %}
+
+      {% for r in data %}
+
+      <div class="repo-item">
+
+        <div class="repo-serial">#{{ r[0] }}</div>
+
+        <p><b>Telugu:</b> {{ r[1] }}</p>
+
+        <p><b>English:</b> {{ r[2] }}</p>
+
+        <p><b>Meaning:</b> {{ r[3] }}</p>
+
+        <p><b>Keywords:</b> {{ r[4] }}</p>
+
+        <p><b>Annotator:</b> {{ r[5] }}</p>
+
+        <p style="opacity:.7"><b>Time:</b> {{ r[6] }}</p>
+
+
+<div class="action-buttons">
+  <a href="/approve/{{ r.id }}">
+    <button class="submit-btn">Approve</button>
+  </a>
+
+  <a href="/reject/{{ r.id }}">
+    <button class="logout-btn">Reject</button>
+  </a>
+</div>
+
+      </div>
+
+      {% endfor %}
+
+    {% else %}
+
+      <p style="text-align:center; opacity:0.7;">
+        No new annotations
+      </p>
+
+    {% endif %}
+
+    </div>
+
+  </div>
+
+</div>
+
+
+
+<script>
+
+function filterNew(e){
+
+  const q = e.target.value.toLowerCase();
+
+  document.querySelectorAll("#newList .repo-item").forEach(item=>{
+
+    if(item.innerText.toLowerCase().includes(q)){
+        item.style.display="block";
+    }
+    else{
+        item.style.display="none";
+    }
+
+  });
+
+}
+
+</script>
+
+</body>
+
+</html>

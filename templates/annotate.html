@@ -1,0 +1,196 @@
+<link rel="stylesheet" href="/static/style.css">
+
+<div class="cosmic-wrapper">
+  <div class="cosmic-card">
+
+    <h1 class="user-name">{{ name }}</h1>
+    <p class="contrib-count">
+      Submitted: {{ submitted }} | Approved: {{ approved }}
+    </p>
+
+    <!-- Telugu -->
+    <div class="input-row">
+        <input id="telugu" placeholder="Proverb (Telugu)" oninput="validateForm()">
+        <button type="button" class="tick-btn" onclick="verify('telugu')">✔</button>
+    </div>
+    <small id="telugu-status" class="status-text"></small>
+
+    <!-- Roman -->
+    <div class="input-row">
+      <input id="english" placeholder="Proverb (Roman)" oninput="validateForm()">
+      <button type="button" class="tick-btn" onclick="verify('english')">✔</button>
+    </div>
+    <small id="english-status" class="status-text"></small>
+
+    <!-- Meaning -->
+    <textarea id="meaning" placeholder="Meaning (English)" oninput="validateForm()"></textarea>
+
+    <!-- Keywords -->
+    <input id="keywords" placeholder="Keywords (comma separated)" oninput="validateForm()">
+
+    <form method="post" onsubmit="sync()">
+
+      <input type="hidden" name="proverb_telugu" id="h_telugu">
+      <input type="hidden" name="proverb_english" id="h_english">
+      <input type="hidden" name="meaning_english" id="h_meaning">
+      <input type="hidden" name="keywords" id="h_keywords">
+
+      <button class="submit-btn" id="submitBtn" disabled>
+        Submit Contribution
+      </button>
+
+    </form>
+
+    <a href="/logout">
+      <button class="logout-btn">Logout</button>
+    </a>
+
+  </div>
+</div>
+
+
+<script>
+
+let isDuplicate = false;
+
+
+/* detect telugu */
+function isTelugu(text){
+  return /[\u0C00-\u0C7F]/.test(text);
+}
+
+
+/* ===============================
+   VERIFY PROVERB
+================================ */
+
+async function verify(field){
+
+  const tel = document.getElementById("telugu");
+  const eng = document.getElementById("english");
+
+  const meaning = document.getElementById("meaning");
+  const keywords = document.getElementById("keywords");
+
+  const telStatus = document.getElementById("telugu-status");
+  const engStatus = document.getElementById("english-status");
+
+  const value = document.getElementById(field).value.trim();
+  if(!value) return;
+
+  /* reset UI */
+  tel.classList.remove("ok","error");
+  eng.classList.remove("ok","error");
+
+  telStatus.innerText="";
+  engStatus.innerText="";
+
+  const res = await fetch("/verify",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({value:value})
+  });
+
+  const d = await res.json();
+
+
+  /* ===============================
+     PROVERB EXISTS
+  =============================== */
+
+  if(d.status==="exists"){
+
+      isDuplicate = true;
+
+      tel.value = d.telugu || "";
+      eng.value = d.roman || "";
+
+      meaning.value = d.meaning || "";
+      keywords.value = d.keywords || "";
+
+      tel.classList.add("error");
+      telStatus.innerText="Already exists";
+
+      validateForm();
+      return;
+  }
+
+
+  /* ===============================
+     NEW ENTRY
+  =============================== */
+
+  isDuplicate = false;
+
+  meaning.value="";
+  keywords.value="";
+
+  if(isTelugu(value)){
+
+      tel.value=value;
+      eng.value=d.roman || "";
+
+      tel.classList.add("ok");
+      telStatus.innerText="New entry";
+
+  }
+  else{
+
+      eng.value=value;
+      tel.value=d.telugu || "";
+
+      eng.classList.add("ok");
+      engStatus.innerText="New entry";
+
+  }
+
+  validateForm();
+}
+
+
+
+/* ===============================
+   ENABLE SUBMIT ONLY IF VALID
+================================ */
+
+function validateForm(){
+
+  const tel = document.getElementById("telugu").value.trim();
+  const eng = document.getElementById("english").value.trim();
+  const meaning = document.getElementById("meaning").value.trim();
+  const keywords = document.getElementById("keywords").value.trim();
+
+  const btn = document.getElementById("submitBtn");
+
+  if(tel && eng && meaning && keywords && !isDuplicate){
+      btn.disabled = false;
+  }
+  else{
+      btn.disabled = true;
+  }
+
+}
+
+
+
+/* ===============================
+   SYNC HIDDEN FORM FIELDS
+================================ */
+
+function sync(){
+
+  document.getElementById("h_telugu").value =
+      document.getElementById("telugu").value;
+
+  document.getElementById("h_english").value =
+      document.getElementById("english").value;
+
+  document.getElementById("h_meaning").value =
+      document.getElementById("meaning").value;
+
+  document.getElementById("h_keywords").value =
+      document.getElementById("keywords").value;
+
+}
+
+</script>

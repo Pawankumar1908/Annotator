@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Login</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+  <div class="cosmic-card login-card">
+
+    <h2 class="login-title">Login / Register</h2>
+
+    <form method="post">
+
+      <input name="email" placeholder="Email" required <input name="email" placeholder="Email" required autocomplete="email">
+
+      <div class="password-row">
+        <input id="password" name="password" type="password" placeholder="Password" required autocomplete="new-password">
+        <span class="eye" onclick="togglePassword()">👁️</span>
+      </div>
+
+      <input name="name" placeholder="Your Name (only for new users)" <input name="name" placeholder="Your Name (only for new users)" autocomplete="off">
+
+      <button class="submit-btn">Continue</button>
+
+      {% if error %}
+      <p class="login-error">{{ error }}</p>
+      {% endif %}
+
+    </form>
+
+  </div>
+<script>
+  function togglePassword() {
+    const p = document.getElementById("password");
+
+    if (p.type === "password") {
+      p.type = "text";
+    } else {
+      p.type = "password";
+    }
+  }
+</script>
+</body>
+
+</html>

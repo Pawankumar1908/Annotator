@@ -1,0 +1,46 @@
+<link rel="stylesheet" href="/static/style.css">
+
+<div class="admin-container repo-page">
+
+    <div class="admin-card repo-card">
+
+        <!-- TITLE -->
+        <h2 class="admin-title">Repository</h2>
+
+        <!-- TOTAL RECORDS -->
+        <div class="repo-count">
+            Total Records: {{ data|length }}
+        </div>
+
+        <!-- SEARCH -->
+        <form method="GET">
+            <input class="admin-search"
+                   type="text"
+                   name="q"
+                   value="{{ query }}"
+                   placeholder="Search by proverb or keyword...">
+        </form>
+
+        <!-- RECORD LIST -->
+        <div class="repo-list">
+
+            {% for row in data %}
+            <div class="repo-item">
+
+                <div class="repo-serial">#{{ row[0] }}</div>
+
+                <p><b>Telugu:</b> {{ row[1] }}</p>
+                <p><b>English:</b> {{ row[2] }}</p>
+                <p><b>Meaning:</b> {{ row[3] }}</p>
+                <p><b>Keywords:</b> {{ row[4] }}</p>
+
+            </div>
+            {% endfor %}
+
+        </div>
+
+    </div>
+
+</div>
+
+<a href="/admin" class="admin-back-btn">← Back</a>
