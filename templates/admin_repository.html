@@ -4,8 +4,23 @@
 
     <div class="admin-card repo-card">
 
-        <!-- TITLE -->
-        <h2 class="admin-title">Repository</h2>
+        <!-- HEADER (TITLE + EXPORT BUTTON) -->
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h2 class="admin-title">Repository</h2>
+
+            <a href="/admin/export">
+                <button style="
+                    background: gold;
+                    border: none;
+                    padding: 10px 20px;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    font-weight: bold;
+                ">
+                    Export CSV
+                </button>
+            </a>
+        </div>
 
         <!-- TOTAL RECORDS -->
         <div class="repo-count">
@@ -27,12 +42,12 @@
             {% for row in data %}
             <div class="repo-item">
 
-                <div class="repo-serial">#{{ row[0] }}</div>
+                <div class="repo-serial">#{{ row.id }}</div>
 
-                <p><b>Telugu:</b> {{ row[1] }}</p>
-                <p><b>English:</b> {{ row[2] }}</p>
-                <p><b>Meaning:</b> {{ row[3] }}</p>
-                <p><b>Keywords:</b> {{ row[4] }}</p>
+                <p><b>Telugu:</b> {{ row.proverb_telugu }}</p>
+                <p><b>English:</b> {{ row.proverb_english }}</p>
+                <p><b>Meaning:</b> {{ row.meaning_english }}</p>
+                <p><b>Keywords:</b> {{ row.keywords }}</p>
 
             </div>
             {% endfor %}
