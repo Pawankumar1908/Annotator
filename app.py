@@ -52,7 +52,7 @@ def auto_import_csv():
                     row["proverb_english"],
                     row["meaning"],
                     row["keywords"],
-                    row["transliteration"]
+                    transliterate(row["proverb_telugu"], TELUGU, ITRANS).lower()
                 ))
 
         conn.commit()
