@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template, redirect, session
+from flask import Flask, request, jsonify, render_template, redirect, session, Response
 import os
 import psycopg2
 from psycopg2.extras import RealDictCursor
@@ -12,9 +12,7 @@ app.secret_key = os.environ.get("SECRET_KEY", "fallback-secret")
 # ================= DB =================
 def db():
     DATABASE_URL = os.environ.get("DATABASE_URL")
-    conn = psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
-    return conn
-
+    return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
 
 # ================= AUTO IMPORT =================
 def auto_import_csv():
@@ -26,6 +24,7 @@ def auto_import_csv():
         count = list(cur.fetchone().values())[0]
 
         if count > 0:
+            conn.close()
             return
 
         BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -48,6 +47,7 @@ def auto_import_csv():
                 ))
 
         conn.commit()
+        print("🔥 CSV Imported")
 
     except Exception as e:
         print("CSV import error:", e)
@@ -55,29 +55,25 @@ def auto_import_csv():
     finally:
         conn.close()
 
+# ================= ADMIN CREATION =================
 def create_admin():
     conn = db()
     cur = conn.cursor()
 
-    cur.execute("SELECT * FROM users WHERE email=%s", ("admin@gmail.com",))
-    user = cur.fetchone()
+    cur.execute("""
+        INSERT INTO users(email, password, name, role)
+        VALUES (%s,%s,%s,%s)
+        ON CONFLICT (email)
+        DO UPDATE SET role='admin'
+    """, ("admin@gmail.com", "admin123", "Admin", "admin"))
 
-    if not user:
-        cur.execute("""
-            INSERT INTO users(email, password, name, role)
-            VALUES (%s, %s, %s, %s)
-        """, ("admin@gmail.com", "admin123", "Admin", "admin"))
-
-        conn.commit()
-        print("🔥 Admin created")
-
+    conn.commit()
     conn.close()
 
 # ================= INIT =================
 init_db(db)
 auto_import_csv()
 create_admin()
-
 
 # ================= LOGIN =================
 @app.route("/", methods=["GET", "POST"])
@@ -120,13 +116,11 @@ def login():
 
     return render_template("login.html", error=None)
 
-
 # ================= LOGOUT =================
 @app.route("/logout")
 def logout():
     session.clear()
     return redirect("/")
-
 
 # ================= VERIFY =================
 @app.route("/verify", methods=["POST"])
@@ -140,7 +134,7 @@ def verify():
         roman = transliterate(value, TELUGU, ITRANS).lower()
     else:
         roman = value.lower()
-        telugu = transliterate(value, ITRANS, TELUGU)
+        telugu = transliterate(roman, ITRANS, TELUGU)
 
     conn = db()
     cur = conn.cursor()
@@ -158,13 +152,15 @@ def verify():
             "keywords": row["keywords"]
         })
 
-    return jsonify({"status": "new", "telugu": telugu, "roman": roman})
-
+    return jsonify({
+        "status": "new",
+        "telugu": telugu,
+        "roman": roman
+    })
 
 # ================= ANNOTATE =================
 @app.route("/annotate", methods=["GET", "POST"])
 def annotate():
-
     if "user" not in session:
         return redirect("/")
 
@@ -212,14 +208,12 @@ def annotate():
                            submitted=submitted,
                            approved=approved)
 
-
 # ================= ADMIN DASHBOARD =================
 @app.route("/admin")
 def admin_dashboard():
     if session.get("role") != "admin":
         return redirect("/")
     return render_template("admin_dashboard.html")
-
 
 # ================= ADMIN NEW =================
 @app.route("/admin/new")
@@ -230,19 +224,15 @@ def admin_new():
     conn = db()
     cur = conn.cursor()
 
-    cur.execute("""
-        SELECT * FROM new_annotations ORDER BY timestamp DESC
-    """)
+    cur.execute("SELECT * FROM new_annotations ORDER BY timestamp DESC")
     data = cur.fetchall()
 
     conn.close()
     return render_template("admin_new.html", data=data)
 
-
 # ================= APPROVE =================
 @app.route("/approve/<int:id>")
 def approve(id):
-
     if session.get("role") != "admin":
         return redirect("/")
 
@@ -252,47 +242,40 @@ def approve(id):
     cur.execute("SELECT * FROM new_annotations WHERE id=%s", (id,))
     row = cur.fetchone()
 
-    if not row:
-        return redirect("/admin/new")
+    if row:
+        roman = transliterate(row["proverb_telugu"], TELUGU, ITRANS).lower()
 
-    telugu = row["proverb_telugu"]
-    english = row["proverb_english"]
-    meaning = row["meaning_english"]
-    keywords = row["keywords"]
-    annotator = row["annotator"]
+        cur.execute("""
+            INSERT INTO repository
+            (proverb_telugu, proverb_english, meaning_english, keywords, transliteration)
+            VALUES (%s,%s,%s,%s,%s)
+        """, (
+            row["proverb_telugu"],
+            row["proverb_english"],
+            row["meaning_english"],
+            row["keywords"],
+            roman
+        ))
 
-    roman = transliterate(telugu, TELUGU, ITRANS).lower()
+        cur.execute("""
+            UPDATE annotators SET approved = approved + 1 WHERE name=%s
+        """, (row["annotator"],))
 
-    cur.execute("""
-        INSERT INTO repository
-        (proverb_telugu, proverb_english, meaning_english, keywords, transliteration)
-        VALUES (%s,%s,%s,%s,%s)
-    """, (telugu, english, meaning, keywords, roman))
+        cur.execute("DELETE FROM new_annotations WHERE id=%s", (id,))
+        conn.commit()
 
-    cur.execute("""
-        UPDATE annotators SET approved = approved + 1 WHERE name=%s
-    """, (annotator,))
-
-    cur.execute("DELETE FROM new_annotations WHERE id=%s", (id,))
-
-    conn.commit()
     conn.close()
-
     return redirect("/admin/new")
-
 
 # ================= REJECT =================
 @app.route("/reject/<int:id>")
 def reject(id):
     conn = db()
     cur = conn.cursor()
-
     cur.execute("DELETE FROM new_annotations WHERE id=%s", (id,))
     conn.commit()
     conn.close()
-
     return redirect("/admin/new")
-
 
 # ================= ADMIN REPOSITORY =================
 @app.route("/admin/repository")
@@ -309,7 +292,6 @@ def admin_repo():
     conn.close()
     return render_template("admin_repository.html", data=data)
 
-
 # ================= ADMIN ANNOTATORS =================
 @app.route("/admin/annotators")
 def admin_annotators():
@@ -324,7 +306,6 @@ def admin_annotators():
 
     conn.close()
     return render_template("admin_annotators.html", data=data)
-
 
 # ================= ADMIN HISTORY =================
 @app.route("/admin/history")
@@ -341,13 +322,28 @@ def admin_history():
     conn.close()
     return render_template("admin_history.html", data=data)
 
+# ================= EXPORT CSV =================
+@app.route("/admin/export")
+def export_csv():
+    if session.get("role") != "admin":
+        return redirect("/")
 
-# ================= SWITCH ROLE =================
-@app.route("/switch-to-annotator", methods=["POST"])
-def switch_to_annotator():
-    session["role"] = "annotator"
-    return redirect("/annotate")
+    conn = db()
+    cur = conn.cursor()
 
+    cur.execute("SELECT * FROM repository")
+    rows = cur.fetchall()
+
+    conn.close()
+
+    def generate():
+        yield "proverb_telugu,proverb_english,meaning_english,keywords,transliteration\n"
+        for r in rows:
+            yield f"{r['proverb_telugu']},{r['proverb_english']},{r['meaning_english']},{r['keywords']},{r['transliteration']}\n"
+
+    return Response(generate(),
+                    mimetype="text/csv",
+                    headers={"Content-Disposition": "attachment; filename=repository.csv"})
 
 # ================= RUN =================
 if __name__ == "__main__":
