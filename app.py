@@ -283,15 +283,25 @@ def admin_repo():
     if session.get("role") != "admin":
         return redirect("/")
 
+    query = request.args.get("q", "")
+
     conn = db()
     cur = conn.cursor()
 
-    cur.execute("SELECT * FROM repository")
+    if query:
+        cur.execute("""
+            SELECT * FROM repository
+            WHERE proverb_telugu ILIKE %s
+            OR proverb_english ILIKE %s
+            OR keywords ILIKE %s
+        """, (f"%{query}%", f"%{query}%", f"%{query}%"))
+    else:
+        cur.execute("SELECT * FROM repository")
+
     data = cur.fetchall()
-
     conn.close()
-    return render_template("admin_repository.html", data=data)
 
+    return render_template("admin_repository.html", data=data, query=query)
 # ================= ADMIN ANNOTATORS =================
 @app.route("/admin/annotators")
 def admin_annotators():
