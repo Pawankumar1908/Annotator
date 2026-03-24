@@ -38,69 +38,70 @@
 
 <body>
 
-    <a href="/admin" class="admin-back-btn">← Back</a>
+<a href="/admin" class="admin-back-btn">← Back</a>
 
-    <div class="admin-container">
+<div class="admin-container">
 
-        <div class="admin-card" style="width:90%; max-width:1100px;">
+    <div class="admin-card" style="width:90%; max-width:1100px;">
 
-            <h1 class="admin-title">History</h1>
+        <h1 class="admin-title">History</h1>
 
-            <table class="history-table">
+        <table class="history-table">
 
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Telugu</th>
-                        <th>English</th>
-                        <th>Action</th>
-                        <th>Admin</th>
-                        <th>Time</th>
-                    </tr>
-                </thead>
+            <thead>
+                <tr>
+                    <th>Annotator</th>
+                    <th>Telugu</th>
+                    <th>English</th>
+                    <th>Meaning</th>
+                    <th>Action</th>
+                    <th>Admin</th>
+                    <th>Time</th>
+                </tr>
+            </thead>
 
-                <tbody>
+            <tbody>
 
-                    {% if data %}
+                {% if data %}
 
-                    {% for row in data %}
+                {% for row in data %}
 
-                    <tr>
+                <tr>
 
-                        <td>{{ row["name"] }}</td>
-                        <td>{{ row["annotator"] }}</td>
+                    <td>{{ row.annotator }}</td>
 
-                        <td>{{ row["proverb_telugu"] }}</td>
-                        <td>{{ row["proverb_english"] }}</td>
+                    <td>{{ row.proverb_telugu }}</td>
+                    <td>{{ row.proverb_english }}</td>
+                    <td>{{ row.meaning_english }}</td>
 
-                        <td class="{{ row['action'] }}">
-                            {{ row["action"] }}
-                        </td>
+                    <td class="{{ row.action }}">
+                        {{ row.action }}
+                    </td>
 
-                        <td>{{ row["admin"] }}</td>
-                        <td>{{ row["timestamp"] }}</td>
+                    <td>{{ row.admin }}</td>
+                    <td>{{ row.timestamp }}</td>
 
-                    </tr>
+                </tr>
 
-                    {% endfor %}
+                {% endfor %}
 
-                    {% else %}
+                {% else %}
 
-                    <tr>
-                        <td colspan="7" style="text-align:center;">No history available</td>
-                    </tr>
+                <tr>
+                    <td colspan="7" style="text-align:center;">
+                        No history available
+                    </td>
+                </tr>
 
-                    {% endif %}
+                {% endif %}
 
-                </tbody>
+            </tbody>
 
-            </table>
-
-        </div>
+        </table>
 
     </div>
 
-</body>
+</div>
 
+</body>
 </html>
