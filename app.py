@@ -4,6 +4,7 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 from indic_transliteration.sanscript import transliterate, TELUGU, ITRANS
 from database import init_db
+import csv
 
 app = Flask(__name__)
 
@@ -18,8 +19,55 @@ def db():
     conn = psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
     return conn
 
-# ================= INIT DB =================
+
+# ================= AUTO IMPORT =================
+def auto_import_csv():
+    conn = db()
+    cur = conn.cursor()
+
+    try:
+        # Check if data exists
+        cur.execute("SELECT COUNT(*) FROM repository")
+        count = list(cur.fetchone().values())[0]
+
+        if count > 0:
+            print("✅ Repository already has data, skipping import")
+            return
+
+        print("⚡ Importing CSV data...")
+
+        BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+        csv_path = os.path.join(BASE_DIR, "repository.csv")
+
+        with open(csv_path, encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+
+            for row in reader:
+                cur.execute("""
+                    INSERT INTO repository
+                    (proverb_telugu, proverb_english, meaning_english, keywords, transliteration)
+                    VALUES (%s, %s, %s, %s, %s)
+                """, (
+                    row["proverb_telugu"],
+                    row["proverb_english"],
+                    row["meaning"],
+                    row["keywords"],
+                    row["transliteration"]
+                ))
+
+        conn.commit()
+        print("🔥 CSV Imported Successfully")
+
+    except Exception as e:
+        print("❌ CSV import error:", e)
+
+    finally:
+        conn.close()
+
+
+# ================= INIT =================
 init_db(db)
+auto_import_csv()
 
 
 # ================= LOGIN =================
@@ -46,6 +94,7 @@ def login():
             else:
                 conn.close()
                 return render_template("login.html", error="Wrong password")
+
         else:
             if not name:
                 conn.close()
