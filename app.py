@@ -259,6 +259,7 @@ def approve(id):
     if row:
         roman = transliterate(row["proverb_telugu"], TELUGU, ITRANS).lower()
 
+        # INSERT INTO REPOSITORY
         cur.execute("""
             INSERT INTO repository
             (proverb_telugu, proverb_english, meaning_english, keywords, transliteration)
@@ -271,23 +272,64 @@ def approve(id):
             roman
         ))
 
+        # 🔥 ADD HISTORY LOG
+        cur.execute("""
+            INSERT INTO history
+            (annotator, proverb_telugu, proverb_english, meaning_english, keywords, action, admin)
+            VALUES (%s,%s,%s,%s,%s,%s,%s)
+        """, (
+            row["annotator"],
+            row["proverb_telugu"],
+            row["proverb_english"],
+            row["meaning_english"],
+            row["keywords"],
+            "approved",
+            session["user"]
+        ))
+
+        # UPDATE ANNOTATOR
         cur.execute("""
             UPDATE annotators SET approved = approved + 1 WHERE name=%s
         """, (row["annotator"],))
 
+        # DELETE FROM NEW
         cur.execute("DELETE FROM new_annotations WHERE id=%s", (id,))
+
         conn.commit()
 
     conn.close()
     return redirect("/admin/new")
-
 # ================= REJECT =================
 @app.route("/reject/<int:id>")
 def reject(id):
+    if session.get("role") != "admin":
+        return redirect("/")
+
     conn = db()
     cur = conn.cursor()
-    cur.execute("DELETE FROM new_annotations WHERE id=%s", (id,))
-    conn.commit()
+
+    cur.execute("SELECT * FROM new_annotations WHERE id=%s", (id,))
+    row = cur.fetchone()
+
+    if row:
+        # 🔥 ADD HISTORY LOG
+        cur.execute("""
+            INSERT INTO history
+            (annotator, proverb_telugu, proverb_english, meaning_english, keywords, action, admin)
+            VALUES (%s,%s,%s,%s,%s,%s,%s)
+        """, (
+            row["annotator"],
+            row["proverb_telugu"],
+            row["proverb_english"],
+            row["meaning_english"],
+            row["keywords"],
+            "rejected",
+            session["user"]
+        ))
+
+        cur.execute("DELETE FROM new_annotations WHERE id=%s", (id,))
+        conn.commit()
+
     conn.close()
     return redirect("/admin/new")
 
