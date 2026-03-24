@@ -3,11 +3,8 @@
 
 <head>
   <title>New Annotations</title>
-
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-
 </head>
-
 
 <body>
 
@@ -28,7 +25,6 @@
 
     </div>
 
-
     <div id="newList" class="repo-list">
 
     {% if data %}
@@ -37,30 +33,29 @@
 
       <div class="repo-item">
 
-        <div class="repo-serial">#{{ r[0] }}</div>
+        <div class="repo-serial">#{{ r.id }}</div>
 
-        <p><b>Telugu:</b> {{ r[1] }}</p>
+        <p><b>Telugu:</b> {{ r.proverb_telugu }}</p>
 
-        <p><b>English:</b> {{ r[2] }}</p>
+        <p><b>English:</b> {{ r.proverb_english }}</p>
 
-        <p><b>Meaning:</b> {{ r[3] }}</p>
+        <p><b>Meaning:</b> {{ r.meaning_english }}</p>
 
-        <p><b>Keywords:</b> {{ r[4] }}</p>
+        <p><b>Keywords:</b> {{ r.keywords }}</p>
 
-        <p><b>Annotator:</b> {{ r[5] }}</p>
+        <p><b>Annotator:</b> {{ r.annotator }}</p>
 
-        <p style="opacity:.7"><b>Time:</b> {{ r[6] }}</p>
+        <p style="opacity:.7"><b>Time:</b> {{ r.timestamp }}</p>
 
+        <div class="action-buttons">
+          <a href="/approve/{{ r.id }}">
+            <button class="submit-btn">Approve</button>
+          </a>
 
-<div class="action-buttons">
-  <a href="/approve/{{ r.id }}">
-    <button class="submit-btn">Approve</button>
-  </a>
-
-  <a href="/reject/{{ r.id }}">
-    <button class="logout-btn">Reject</button>
-  </a>
-</div>
+          <a href="/reject/{{ r.id }}">
+            <button class="logout-btn">Reject</button>
+          </a>
+        </div>
 
       </div>
 
@@ -79,8 +74,6 @@
   </div>
 
 </div>
-
-
 
 <script>
 
