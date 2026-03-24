@@ -129,17 +129,31 @@ def verify():
 
     is_telugu = any('\u0C00' <= c <= '\u0C7F' for c in value)
 
-    if is_telugu:
-        telugu = value
-        roman = transliterate(value, TELUGU, ITRANS).lower()
-    else:
-        roman = value.lower()
-        telugu = transliterate(roman, ITRANS, TELUGU)
-
     conn = db()
     cur = conn.cursor()
 
-    cur.execute("SELECT * FROM repository WHERE transliteration=%s", (roman,))
+    if is_telugu:
+        # Telugu input → check via transliteration
+        roman = transliterate(value, TELUGU, ITRANS).lower()
+
+        cur.execute("""
+            SELECT * FROM repository
+            WHERE transliteration=%s
+        """, (roman,))
+
+        telugu = value
+
+    else:
+        # Roman input → SIMPLE CHECK in proverb_english
+        roman = value.lower()
+
+        cur.execute("""
+            SELECT * FROM repository
+            WHERE LOWER(proverb_english) = %s
+        """, (roman,))
+
+        telugu = transliterate(roman, ITRANS, TELUGU)
+
     row = cur.fetchone()
     conn.close()
 
