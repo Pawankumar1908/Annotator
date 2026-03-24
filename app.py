@@ -55,10 +55,28 @@ def auto_import_csv():
     finally:
         conn.close()
 
+def create_admin():
+    conn = db()
+    cur = conn.cursor()
+
+    cur.execute("SELECT * FROM users WHERE email=%s", ("admin@gmail.com",))
+    user = cur.fetchone()
+
+    if not user:
+        cur.execute("""
+            INSERT INTO users(email, password, name, role)
+            VALUES (%s, %s, %s, %s)
+        """, ("admin@gmail.com", "admin123", "Admin", "admin"))
+
+        conn.commit()
+        print("🔥 Admin created")
+
+    conn.close()
 
 # ================= INIT =================
 init_db(db)
 auto_import_csv()
+create_admin()
 
 
 # ================= LOGIN =================
